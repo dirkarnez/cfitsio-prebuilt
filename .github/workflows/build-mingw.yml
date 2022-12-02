@@ -11,12 +11,11 @@ jobs:
     name: Create Release
     runs-on: windows-2019
     env:
-      libraryName: cfit
-      cmakeInstallationPath: cfit-installation
-      tagName: 1.4.2
-      mingwTargetZip: cfit-${{ github.ref_name }}-mingw64-x86_64-posix-seh-rev0-8.1.0.zip
+      libraryName: cfitsio
+      cmakeInstallationPath: cfitsio-installation
+      mingwTargetZip: cfitsio-${{ github.ref_name }}-mingw64-x86_64-posix-seh-rev0-8.1.0.zip
     steps:
-      - name: download cfit
+      - name: download cfitsio
         shell: cmd
         run: |
           curl https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit-4.2.0.zip -L --output cfit-4.2.0.zip &&^
