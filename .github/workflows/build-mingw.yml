@@ -1,0 +1,92 @@
+name: cpp-cmake-mingw-prebuilt-release-actions-workflow
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'c*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: windows-2019
+    env:
+      libraryName: cfit
+      cmakeInstallationPath: cfit-installation
+      tagName: 1.4.2
+      mingwTargetZip: cfit-${{ github.ref_name }}-mingw64-x86_64-posix-seh-rev0-8.1.0.zip
+    steps:
+      - name: download cfit
+        shell: cmd
+        run: |
+          curl https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit-4.2.0.zip -L --output cfit-4.2.0.zip &&^
+          dir &&^
+          7z.exe x cfit-4.2.0.zip
+
+      - name: download zlib
+        shell: cmd
+        run: |
+          curl https://github.com/dirkarnez/zlib-prebuilt/releases/download/v1.2.12/zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip -L --output zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip &&^
+          dir &&^
+          7z.exe x zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip -o"zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0"
+          
+      - name: curl x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+        shell: cmd
+        run: |
+          curl https://github.com/2641797006/c/blob/master/GCC-zip/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z?raw=true -L --output x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z &&^
+          dir &&^
+          7z.exe x x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
+        
+      - name: curl cmake-3.24.0-windows-x86_64.zip
+        shell: cmd
+        run: |
+          curl https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-windows-x86_64.zip -L --output cmake-3.24.0-windows-x86_64.zip &&^
+          dir &&^
+          7z.exe x cmake-3.24.0-windows-x86_64.zip
+      
+      - name: curl PortableGit-2.38.1-64-bit.7z.exe
+        shell: cmd
+        run: |
+          curl https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/PortableGit-2.38.1-64-bit.7z.exe -L --output PortableGit-2.38.1-64-bit.7z.exe &&^
+          dir &&^
+          7z.exe x PortableGit-2.38.1-64-bit.7z.exe -o"PortableGit-2.38.1-64-bit"
+        
+      - name: set PATH, check mingw version, cmake generate, build and install
+        shell: cmd
+        run: |
+            set CD_LINUX=%CD:\=/%
+            set PATH=^
+            ${{ github.workspace }}\mingw64;^
+            ${{ github.workspace }}\mingw64\bin;^
+            ${{ github.workspace }}\PortableGit-2.38.1-64-bit\bin;^
+            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;^
+            gcc --version &&^
+            cd cfit-4.2.0 &&^
+            cmake.exe -G "MinGW Makefiles" ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DBUILD_SHARED_LIBS=OFF ^
+            -DUSE_PTHREADS=ON ^
+            -DUSE_CURL=OFF ^
+            -DTESTS=OFF ^
+            -DUTILS=OFF ^
+            -DUSE_SSE2=ON ^
+            -DUSE_SSSE3=ON ^
+            -DUSE_BZIP2=OFF ^
+            -DZLIB_ROOT="%CD_LINUX%/zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0" ^
+            -DZLIB_USE_STATIC_LIBS=ON ^
+            -DCMAKE_INSTALL_PREFIX="cmake-build/${{ env.cmakeInstallationPath }}" -B./cmake-build &&^
+            cd cmake-build && cmake --build . && cmake --install . 
+            
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          directory: "cfit-4.2.0/cmake-build/${{ env.cmakeInstallationPath }}"
+          filename: "${{ env.mingwTargetZip }}"
+          
+      - name: Release prebuilt
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "cfit-4.2.0/cmake-build/${{ env.cmakeInstallationPath }}/${{ env.mingwTargetZip }}"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
