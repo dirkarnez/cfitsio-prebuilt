@@ -20,15 +20,15 @@ jobs:
         shell: cmd
         run: |
           curl https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit-4.2.0.zip -L --output cfit-4.2.0.zip &&^
-          dir &&^
-          7z.exe x cfit-4.2.0.zip
+          7z.exe x cfit-4.2.0.zip &&^
+          dir
 
       - name: download zlib
         shell: cmd
         run: |
           curl https://github.com/dirkarnez/zlib-prebuilt/releases/download/v1.2.12/zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip -L --output zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip &&^
-          dir &&^
-          7z.exe x zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip -o"zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0"
+          7z.exe x zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0.zip -o"zlib-v1.2.12-x86_64-posix-seh-rev0-8.1.0" &&^
+          dir
           
       - name: curl x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z
         shell: cmd
@@ -59,7 +59,7 @@ jobs:
             ${{ github.workspace }}\mingw64;^
             ${{ github.workspace }}\mingw64\bin;^
             ${{ github.workspace }}\PortableGit-2.38.1-64-bit\bin;^
-            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;^
+            ${{ github.workspace }}\cmake-3.24.0-windows-x86_64\bin;
             gcc --version &&^
             cd cfit-4.2.0 &&^
             cmake.exe -G "MinGW Makefiles" ^
